@@ -47,15 +47,129 @@
 
 ### 1.4. 命令式和声明式编程的区别
 
-- 原生实现计时器
+#### 先理清两个重点：命令式 vs 声明式；MVC vs MVVM
+
+> Vue 本身就是**声明式 + MVVM**框架，这两块是 Vue 的底层思想。
+
+------
+
+#### 1 命令式 和 声明式编程（配计时器例子）
+
+一句话区分： ✅ **命令式：告诉计算机【一步步怎么做】（how）** ✅ **声明式：告诉计算机【我想要什么结果】（what）**
+
+##### 👉 原生 JS 计时器（命令式）
+
+需求：页面显示一个数字，每秒 +1
+
+```
+<div id="count"></div>
+<script>
+  // 命令式：我一条一条指挥浏览器做事情
+  let num = 0
+  const dom = document.querySelector('#count') // 1.找到节点
+  dom.innerText = num                          // 2.初始赋值
+  setInterval(() => {
+    num++                                      // 3.数据+1
+    dom.innerText = num                        // 4.手动更新DOM
+  }, 1000)
+</script>
+```
+
+特点： 每一步都是指令：找元素、改内容、定时、更新。 **你要关心 DOM 操作的全过程**，数据变了，必须手动去同步页面。
+
+##### 👉 Vue 实现同一个计时器（声明式）
+
+```
+<template>
+  <div>{{ count }}</div>
+</template>
+<script setup>
+import { ref } from 'vue'
+const count = ref(0)
+setInterval(() => {
+  count.value++
+}, 1000)
+</script>
+```
+
+你只描述：页面上要展示 `count`。 你只修改数据 `count.value++`，**不用写任何 DOM 查询、innerText**。 Vue 帮你自动把数据同步到视图。 你只关心：**数据是什么，页面长什么样**，不用管怎么操作DOM。
+
+总结对比
+
+| 命令式                           | 声明式                     |
+| -------------------------------- | -------------------------- |
+| 着重 how：怎么做                 | 着重 what：想要什么        |
+| 手动操作 DOM、手动同步数据和界面 | 框架自动响应，数据驱动视图 |
+| 原生JS、jQuery 典型              | Vue / React 典型           |
+
+> 小提醒：Vue 底层依然是命令式 DOM 操作，只是框架帮你封装好了，对外暴露声明式写法。
+
+------
 
 
 
 
 
-### 1.5. MVC和MVVM的模型区别
+### 1.5 MVC 和 MVVM
 
--   mvvm-model(script),view(tample),viewmodel(核心,作用于view和model之间),mvc-model,view,control(与viewmodel作用一样)
+MVC（经典后端早期思想，前端也用过）
+
+三个部分：
+
+1. **Model 模型**：数据（后端数据、业务数据）
+2. **View 视图**：页面UI、HTML
+3. **Controller 控制器**：中间人
+
+MVC 流程： `View → Controller → Model → View`
+
+1. 用户在 View 点击（触发事件）
+2. 事件交给 Controller
+3. Controller 修改 Model
+4. Model 更新后，通知 View 刷新
+
+⚠️ MVC 的痛点： **View 和 Model 是可以直接通信耦合在一起的**，视图和数据容易粘在一起，Controller 很臃肿，视图和数据没有双向绑定。 早期 jQuery 项目、很多后端模板引擎（JSP）是 MVC 思路。
+
+#### MVVM（Vue / Knockout 这套，Vue 就是 MVVM）
+
+三个部分：
+
+1. **Model**：`script` 里的数据、状态（ref、reactive、接口数据）
+2. **View**：`template` 模板，页面视图
+3. **ViewModel**：Vue 实例（核心！），是 View 和 Model 的桥梁
+
+MVVM 流程： View 和 Model **不能直接通信**，全部交给 ViewModel
+
+- View → ViewModel → Model
+- Model → ViewModel → View
+
+ViewModel 自带**双向绑定**：
+
+- 改 Model 数据 → 自动更新 View
+- View 输入（比如 input）→ 自动回写 Model（v-model）
+
+✅ 重点区别（考试常考）
+
+1. MVC：Controller 是事件处理、业务逻辑；View 和 Model 允许直接交互，**没有双向绑定机制**
+2. MVVM：ViewModel 负责**响应式+双向绑定**，隔离 View 和 Model，视图和数据完全解耦
+3. Vue 的 v-model 就是 MVVM 双向绑定最典型的体现，MVC 没有这个能力
+
+#### 表格对比
+
+|          | MVC                                | MVVM                           |
+| -------- | ---------------------------------- | ------------------------------ |
+| 组成     | Model、View、Controller            | Model、View、ViewModel         |
+| 中间人   | Controller                         | ViewModel                      |
+| 双向绑定 | 无，需要手动刷新视图               | 自带（Vue响应式）              |
+| 耦合     | View 和 Model 可能直接通信，耦合高 | View 和 Model 完全隔离，低耦合 |
+| 代表     | JSP、早期jQuery后端模板            | Vue                            |
+
+------
+
+### 一句话速记，方便背诵
+
+1. **MVC 控制器处理事件；MVVM 的 VM 负责双向绑定，数据变视图自动变**
+
+
 
 
 
@@ -119,9 +233,9 @@
       <!-- 1.4,调用函数 -->
       <h2>{{ printWord() }}</h2>
   
-      <!-- 注意:只能是表达式(既有结果的)不能是语句,否则报错 -->
-      <!-- <h2>{{ const a = 2 }}</h2> -->
-      <!-- <h2>{{ if( count>10){'yes'}else{'no'} }}</h2> -->
+      <!-- 注意:只能是表达式(即有结果的)不能是语句,否则报错 -->
+      <!-- <h2>{{ const a = 2 }}</h2> 报错-->
+      <!-- <h2>{{ if( count>10){'yes'}else{'no'} }}</h2> 这个报错 -->
   ```
 
   
@@ -263,9 +377,20 @@ v-bind:src  ->  : src
 
 ### 2.6. 动态绑定属性名
 
-```
-:[name] = ''
-如<h2 :[name]="'aaa'">{{ message }}</h2> -- aa必须是""嵌套'',不然aa是变量而不是常量
+```vue
+<script setup>
+const propKey = 'class' // 这个用来当属性名
+const propVal = 'red'   // 这个用来当属性值
+</script>
+
+<template>
+  <!-- propKey算出属性名class，propVal算出值red -->
+  <h2 :[propKey]="propVal">文字</h2>
+  <!-- 等价 -->
+  <h2 :class="propVal">文字</h2>
+  <!-- 渲染结果 -->
+  <h2 class="red">文字</h2>
+</template>
 ```
 
 
